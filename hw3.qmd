@@ -4,8 +4,8 @@ author: "[Insert your name here]{style='background-color: yellow;'}"
 toc: true
 title-block-banner: true
 title-block-style: default
-format: html
-# format: pdf
+#format: html
+format: pdf
 ---
 
 ---
@@ -347,7 +347,7 @@ Print the coefficient values for LASSO regression at the `lambda.1se` value? Wha
 
 Store the variable names with non-zero coefficients in `lasso_vars`, and create a formula object called `lasso_formula` using the `make_formula()` function provided in the Appendix. 
 
-```{R}
+```R
 # Extract coefficients at lambda.1se for LASSO model
 lasso_coef <- coef(lasso_model, s = "lambda.1se")
 
@@ -376,8 +376,7 @@ Print the coefficient values for ridge regression at the `lambda.1se` value? Wha
 
 Store the variable names with non-zero coefficients in `ridge_vars`, and create a formula object called `ridge_formula` using the `make_formula()` function provided in the Appendix. 
 
-```{R}
-# Extract coefficients at lambda.1se for Ridge model
+```R# Extract coefficients at lambda.1se for Ridge model
 ridge_coef <- coef(ridge_model, s = "lambda.1se")
 
 # Print coefficient values
@@ -444,7 +443,7 @@ Use:
 
 to **generate all possible linear regression formulas** using the variables in `x_vars`. This is most optimally achieved using the `map()` function from the `purrr` package.
 
-```{R}
+```R
 formulas <- map(
   1:length(x_vars),
   \(x){
@@ -456,7 +455,7 @@ formulas <- map(
 
 If your code is right the following command should return something along the lines of:
 
-```{R}
+```R
 sample(formulas, 4) %>% as.character()
 # Output:
 # [1] "quality ~ volatile_acidity + residual_sugar + density + pH + alcohol"                                                 
@@ -470,7 +469,7 @@ sample(formulas, 4) %>% as.character()
 ###### 4.3  (10 points)
 Use `map()` and `lm()` to fit a linear regression model to each formula in `formulas`, using `df` as the data source. Use `broom::glance()` to extract the model summary statistics, and bind them together into a single tibble of summaries using the `bind_rows()` function from `dplyr`.
 
-```{R}
+```R
 models <- map(formulas, ~lm(., data = df))
 summaries <- map(models, glance)
 
@@ -487,7 +486,7 @@ head(summaries)
 
 Extract the `adj.r.squared` values from `summaries` and use them to identify the formula with the _**highest**_ adjusted R-squared value.
 
-```{R}
+```R
 adj_r_squared <- summaries$adj.r.squared
 
 best_model_index <- which.max(adj_r_squared)
@@ -496,7 +495,7 @@ best_model_index <- which.max(adj_r_squared)
 
 Store resulting formula as a variable called `rsq_formula`.
 
-```{R}
+```R
 rsq_formula <- formulas[[best_model_index]]
 ```
 
@@ -507,7 +506,7 @@ rsq_formula <- formulas[[best_model_index]]
 Extract the `AIC` values from `summaries` and use them to identify the formula with the **_lowest_** AIC value.
 
 
-```{R}
+```R
 aic_values <- summaries$AIC
 
 best_model_index <- which.min(aic_values)
@@ -516,7 +515,7 @@ best_model_index <- which.min(aic_values)
 Store resulting formula as a variable called `aic_formula`.
 
 
-```{R}
+```R
 aic_formula <- formulas[[best_model_index]]
 print(aic_formula)
 
@@ -528,7 +527,7 @@ print(aic_formula)
 
 Combine all formulas shortlisted into a single vector called `final_formulas`.
 
-```{R}
+```R
 null_formula <- formula(null_model)
 full_formula <- formula(full_model)
 
@@ -557,7 +556,7 @@ final_formulas <- c(
 
 Use `map()` and `glance()` to extract the `sigma, adj.r.squared, AIC, df`, and `p.value` statistics for each model obtained from `final_formulas`. Bind them together into a single data frame `summary_table`. Summarize your main findings.
 
-```{R}
+```R
 summary_table <- map(
   final_formulas,
   \(formula) {
@@ -591,7 +590,7 @@ summary_table %>% knitr::kable()
 
 The following function which takes as input a vector of column names `x` and outputs a `formula` object with `quality` as the response variable and the columns of `x` as the covariates. 
 
-```{R}
+```R
 make_formula <- function(x){
   as.formula(
     paste("quality ~ ", paste(x, collapse = " + "))
@@ -608,7 +607,7 @@ make_formula(c("a", "b", "c"))
 
 The `make_model_matrix` function below takes a `formula` as input and outputs a **rescaled** model matrix `X` in a format amenable for `glmnet()`
 
-```{R}
+```R
 make_model_matrix <- function(formula){
   X <- model.matrix(formula, df)[, -1]
   cnames <- colnames(X)
@@ -631,7 +630,7 @@ make_model_matrix <- function(formula){
 
 Print your `R` session information using the following command
 
-```{R}
+```R
 sessionInfo()
 ```
 :::
