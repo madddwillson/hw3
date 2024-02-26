@@ -38,6 +38,7 @@ library(corrplot)
 <br><br><br><br>
 ---
 
+
 ## Question 1
 ::: {.callout-tip}
 ## 50 points
@@ -57,8 +58,8 @@ url2 <- "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/
 df1 <- read.csv(url1, sep = ";")
 df2 <- read.csv(url2, sep = ";")
 ```
-
 ---
+
 
 ###### 1.2 (5 points)
 
@@ -134,6 +135,7 @@ t1 <- diff_mean / sqrt(sp_squared * (1/n_red + 1/n_white))
 ```
 
 
+
 ---
 
 ###### 1.4 (10 points)
@@ -146,6 +148,7 @@ Perform a two-sample t-test to compare the quality of white and red wines using 
 t_test <- t.test(quality ~ type, data = df, var.equal = TRUE)
 t2 <- t_test$statistic
 ```
+
 
 ---
 
@@ -161,8 +164,8 @@ t_stat <- summary_coef["typewhite", "t value"]
 t3 <- t_stat
 ```
 
-
 ---
+
 
 ###### 1.6  (5 points)
 
@@ -177,6 +180,7 @@ Also, since the magnitive of each is the same we know that  Welch's t-test and t
 
 
 <br><br><br><br>
+
 ---
 
 ## Question 2
@@ -184,6 +188,7 @@ Also, since the magnitive of each is the same we know that  Welch's t-test and t
 ## 25 points
 Collinearity
 :::
+
 
 
 ---
@@ -226,6 +231,7 @@ summary(model_sulfur)
 
 ---
 
+
 ###### 2.3 (5 points)
 
 Visualize the correlation matrix of all numeric columns in `df` using `corrplot()`
@@ -239,8 +245,8 @@ corrplot(correlation_matrix, method = "color")
 ```
 
 
-
 ---
+
 
 ###### 2.4 (5 points)
 
@@ -258,6 +264,7 @@ The VIF scores indicate that there is potential multicollinearity in density and
 
 <br><br><br><br>
 <br><br><br><br>
+
 ---
 
 ## Question 3
@@ -367,7 +374,6 @@ Print the coefficient values for ridge regression at the `lambda.1se` value? Wha
 Store the variable names with non-zero coefficients in `ridge_vars`, and create a formula object called `ridge_formula` using the `make_formula()` function provided in the Appendix. 
 
 
--------
 ```{R}
 ridge_coef <- coef(ridge_model, s = "lambda.1se")
 ridge_vars <- rownames(ridge_coef)[ridge_coef[, 1] != 0]
@@ -378,8 +384,8 @@ print(ridge_vars)
 ```
 
 
----
 The variables selected are Intercept, volatile_acidity, citric_acid, residual_sugar, chlorides, total_sulfur_dioxide, density, pH, sulphates, alcohol, and typewhite.
+---
 
 
 ###### 3.6  (10 points)
@@ -412,6 +418,7 @@ print(total_models)
 ```
 
 
+---
 
 
 ###### 4.2  (20 points)
