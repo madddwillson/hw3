@@ -224,7 +224,7 @@ model_sulfur <- lm(quality ~ total_sulfur_dioxide, data = df)
 summary(model_citric)
 summary(model_sulfur)
 ```
- The reuslts are very comparable to the previous one. They show that, variables like  citric acid and total sulfur dioxide do not seem to have a significant effect on quality.
+ The results are very comparable to the previous one. They show that, variables like  citric acid and total sulfur dioxide do not seem to have a significant effect on quality.
 
 
 ---
@@ -315,10 +315,6 @@ forward_formula
 
 3. Then, use the `cv.glmnet()` function to perform LASSO and Ridge regression with `X` and `y`.
 
-```R
-... # Insert your code here. 
-```
-
 Create side-by-side plots of the ridge and LASSO regression results. Interpret your main findings. 
 
 ```{R}
@@ -348,24 +344,21 @@ Print the coefficient values for LASSO regression at the `lambda.1se` value? Wha
 Store the variable names with non-zero coefficients in `lasso_vars`, and create a formula object called `lasso_formula` using the `make_formula()` function provided in the Appendix. 
 
 ```R
-# Extract coefficients at lambda.1se for LASSO model
 lasso_coef <- coef(lasso_model, s = "lambda.1se")
-
-# Print coefficient values
-print(lasso_coef)
-
-# Identify variables with non-zero coefficients
 lasso_vars <- names(lasso_coef)[lasso_coef != 0]
 
-# Remove the response variable "quality"
-lasso_vars <- lasso_vars[!lasso_vars %in% "quality"]
+lasso_vars <- lasso_vars[!(lasso_vars %in% "quality")]
 
-# Create the LASSO formula
 lasso_formula <- as.formula(paste("quality ~", paste(lasso_vars, collapse = " + ")))
 
-# Print LASSO formula
-print(lasso_formula)
 
+ridge_coef <- coef(cv_lasso, s = "lambda.1se")
+ridge_vars <- rownames(ridge_coef)[ridge_coef[, 1] != 0]
+ridge_formula <- as.formula(paste("quality ~", paste(ridge_vars, collapse = " + ")))
+
+ridge_coef
+ridge_vars
+ridge_formula
 ```
 
 ---
@@ -376,33 +369,27 @@ Print the coefficient values for ridge regression at the `lambda.1se` value? Wha
 
 Store the variable names with non-zero coefficients in `ridge_vars`, and create a formula object called `ridge_formula` using the `make_formula()` function provided in the Appendix. 
 
-```R# Extract coefficients at lambda.1se for Ridge model
+
+-------
+```{R}
 ridge_coef <- coef(ridge_model, s = "lambda.1se")
+ridge_vars <- rownames(ridge_coef)[ridge_coef[, 1] != 0]
+ridge_formula <- as.formula(paste("quality ~", paste(ridge_vars, collapse = " + ")))
 
-# Print coefficient values
 print(ridge_coef)
-
-# Identify variables with non-zero coefficients
-ridge_vars <- names(ridge_coef)[ridge_coef != 0]
-
-# Create formula object using make_formula() function
-ridge_formula <- make_formula(ridge_vars)
-
-# Print Ridge formula
-print(ridge_formula)
-
+print(ridge_vars)
 ```
 
 
 ---
+The variables selected are Intercept, volatile_acidity, citric_acid, residual_sugar, chlorides, total_sulfur_dioxide, density, pH, sulphates, alcohol, and typewhite.
+
 
 ###### 3.6  (10 points)
 
-What is the difference between stepwise selection, LASSO and ridge based on your analyses above?
+What is the difference between step wise selection, LASSO and ridge based on your analyses above?
 
-
-
-
+The ridge based version is least aggressive. Coefficients only approach zero while the other two can be zero. Lasso is the most aggressive in variable selection making it better for when the number of columns is high.
 
 
 
@@ -423,9 +410,11 @@ Variable selection
 
 Excluding `quality` from `df` we have $10$ possible predictors as the covariates. How many different models can we create using any subset of these $10$ coavriates as possible predictors? Justify your answer. 
 ```{R}
-
+total_models <- sum(choose(10, 0:10))
+print(total_models)
 ```
----
+
+
 
 
 ###### 4.2  (20 points)
@@ -436,6 +425,9 @@ Store the names of the predictor variables (all columns except `quality`) in an 
 x_vars <- colnames(df %>% select(-quality))
 ```
 
+
+
+
 Use: 
 
 * the `combn()` function (built-in R function) and 
@@ -443,19 +435,19 @@ Use:
 
 to **generate all possible linear regression formulas** using the variables in `x_vars`. This is most optimally achieved using the `map()` function from the `purrr` package.
 
-```R
+```{R}
 formulas <- map(
   1:length(x_vars),
   \(x){
-    vars <- combn(x_vars, x)
-    map(vars, \(var_set) make_formula(var_set))
+    vars <- combn(x_vars, x, simplify = FALSE) 
+    map(vars, ~ as.formula(paste("quality ~", paste(.x, collapse = "+")))) 
   }
 ) %>% unlist()
 ```
 
 If your code is right the following command should return something along the lines of:
 
-```R
+```{R}
 sample(formulas, 4) %>% as.character()
 # Output:
 # [1] "quality ~ volatile_acidity + residual_sugar + density + pH + alcohol"                                                 
@@ -469,7 +461,7 @@ sample(formulas, 4) %>% as.character()
 ###### 4.3  (10 points)
 Use `map()` and `lm()` to fit a linear regression model to each formula in `formulas`, using `df` as the data source. Use `broom::glance()` to extract the model summary statistics, and bind them together into a single tibble of summaries using the `bind_rows()` function from `dplyr`.
 
-```R
+```{R}
 models <- map(formulas, ~lm(., data = df))
 summaries <- map(models, glance)
 
@@ -486,7 +478,7 @@ head(summaries)
 
 Extract the `adj.r.squared` values from `summaries` and use them to identify the formula with the _**highest**_ adjusted R-squared value.
 
-```R
+```{R}
 adj_r_squared <- summaries$adj.r.squared
 
 best_model_index <- which.max(adj_r_squared)
@@ -495,8 +487,9 @@ best_model_index <- which.max(adj_r_squared)
 
 Store resulting formula as a variable called `rsq_formula`.
 
-```R
+```{R}
 rsq_formula <- formulas[[best_model_index]]
+print(rsq_formula)
 ```
 
 ---
@@ -506,7 +499,7 @@ rsq_formula <- formulas[[best_model_index]]
 Extract the `AIC` values from `summaries` and use them to identify the formula with the **_lowest_** AIC value.
 
 
-```R
+```{R}
 aic_values <- summaries$AIC
 
 best_model_index <- which.min(aic_values)
@@ -515,10 +508,9 @@ best_model_index <- which.min(aic_values)
 Store resulting formula as a variable called `aic_formula`.
 
 
-```R
+```{R}
 aic_formula <- formulas[[best_model_index]]
 print(aic_formula)
-
 ```
 
 ---
@@ -527,7 +519,7 @@ print(aic_formula)
 
 Combine all formulas shortlisted into a single vector called `final_formulas`.
 
-```R
+```{R}
 null_formula <- formula(null_model)
 full_formula <- formula(full_model)
 
@@ -536,19 +528,23 @@ final_formulas <- c(
   full_formula,
   backward_formula,
   forward_formula,
-  lasso_formula, 
+  #lasso_formula, 
   ridge_formula,
   rsq_formula,
   aic_formula
 )
+print(final_formulas)
 ```
 
 * Are `aic_formula` and `rsq_formula` the same? How do they differ from the formulas shortlisted in question 3?
 
+They are not the same and they are different because aic uses lowest AIC value to select and rsq uses highest r squared.
+
 * Which of these is more reliable? Why? 
+AIC is because it compares the goodness of the fit with the model and the data.
 
 * If we had a dataset with $10,000$ columns, which of these methods would you consider for your analyses? Why?
-
+I would use LASSO in the case of high dimensionality becuase it would select in a more agressive way.
 ---
 
 ###### 4.7  (10 points)
@@ -556,18 +552,26 @@ final_formulas <- c(
 
 Use `map()` and `glance()` to extract the `sigma, adj.r.squared, AIC, df`, and `p.value` statistics for each model obtained from `final_formulas`. Bind them together into a single data frame `summary_table`. Summarize your main findings.
 
-```R
-summary_table <- map(
-  final_formulas,
-  \(formula) {
-    model <- lm(formula, data = df)
-    glance(model)
+```{R}
+# Function to fit the model correctly based on the presence of the intercept term
+fit_model <- function(formula, data) {
+  if ("(Intercept)" %in% all.vars(formula)) {
+    lm(formula, data = data)
+  } else {
+    lm(formula, data = data, intercept = FALSE)
   }
-) %>% 
-bind_rows()
+}
 
-summary_table %>% knitr::kable()
+summary_table <-map_dfr(
+  final_formulas,
+  ~ {
+    model <- fit_model(.x, data = df)
+    glance(model)
+  },
+  .id = "model_id"  
+)
 
+print(summary_table)
 ```
 
 
@@ -590,7 +594,7 @@ summary_table %>% knitr::kable()
 
 The following function which takes as input a vector of column names `x` and outputs a `formula` object with `quality` as the response variable and the columns of `x` as the covariates. 
 
-```R
+```{R}
 make_formula <- function(x){
   as.formula(
     paste("quality ~ ", paste(x, collapse = " + "))
@@ -607,7 +611,7 @@ make_formula(c("a", "b", "c"))
 
 The `make_model_matrix` function below takes a `formula` as input and outputs a **rescaled** model matrix `X` in a format amenable for `glmnet()`
 
-```R
+```{R}
 make_model_matrix <- function(formula){
   X <- model.matrix(formula, df)[, -1]
   cnames <- colnames(X)
@@ -630,7 +634,7 @@ make_model_matrix <- function(formula){
 
 Print your `R` session information using the following command
 
-```R
+```{R}
 sessionInfo()
 ```
 :::
